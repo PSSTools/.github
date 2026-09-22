@@ -101,8 +101,10 @@ could, on its own, block the stewardship path described above.
 Clause 3 is deliberate: twenty forty-line pull requests are eight hundred lines that would
 never trip a per-PR threshold.
 
-Clauses 1 and 2 are checked automatically on each pull request; clause 3 is reviewed
-periodically by the maintainers, who will get in touch if it applies to you.
+Clauses 1 and 2 are checked automatically on each pull request. Clause 3 is reviewed
+quarterly by the maintainers (`scripts/ca-sweep.py --contributors`), who will get in touch
+if it applies to you — and will do so while you are still working on the project rather
+than years later.
 
 ### Maintainer waiver, in both directions
 
