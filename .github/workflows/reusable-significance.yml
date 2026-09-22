@@ -43,6 +43,11 @@ jobs:
 
           files = json.load(open("files.json"))
 
+          # GitHub caps this endpoint at 3000 files. Past that the counts below
+          # are a lower bound -- harmless here, because a pull request touching
+          # 3000+ files is over the threshold on any reading.
+          truncated = len(files) >= 3000
+
           # Source roots for clause 1. A new file here is self-contained
           # expressive work and the most likely thing to ever need excising.
           SOURCE_ROOTS = ("src/", "python/", "ts/")
@@ -99,6 +104,7 @@ jobs:
               "net": net,
               "counted": len(counted),
               "skipped": len(skipped),
+              "truncated": truncated,
           }, indent=2))
           PY
           cat verdict.json

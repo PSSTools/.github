@@ -68,7 +68,7 @@ def check(label, cond, detail=""):
 
 
 # ---------------------------------------------------------------- CA-T1 DCO
-dco = extract(".github/workflows/dco.yml", "dco", 0)
+dco = extract(".github/workflows/reusable-dco.yml", "dco", 0)
 SIGNED = "fix thing\n\nSigned-off-by: A <a@example.com>"
 
 cases = [
@@ -92,7 +92,7 @@ for label, commits, want in cases:
     check(label, p.returncode == want, f"rc={p.returncode} want={want}\n{p.stdout}\n{p.stderr}")
 
 # -------------------------------------------------------- CA-T2 significance
-sig = extract(".github/workflows/significance.yml", "significance", 0)
+sig = extract(".github/workflows/reusable-significance.yml", "significance", 0)
 
 
 def verdict(files):
@@ -145,6 +145,43 @@ check("sig: line count aggregates across files", v["clause2"], json.dumps(v))
 
 v = verdict([f("src/pssparser/a.py", "modified", 20, 400)])
 check("sig: large deletion does not trip", not v["trips"], json.dumps(v))
+
+# --------------------------------------------------- wiring, not logic ----
+# This section exists because of a real bug. The caller workflows are also
+# named dco.yml / icla-significance.yml, and psstools/.github is itself one of
+# the repositories that gets a caller -- so the fan-out overwrote the reusable
+# body with a caller whose `uses:` then resolved to itself, silently breaking
+# the DCO gate for every repository in the org. Unit-testing the Python inside
+# the workflows could not have caught that; only checking the wiring can.
+WF = os.path.join(SP, ".github", "workflows")
+workflows = {f: yaml.safe_load(open(os.path.join(WF, f)))
+             for f in sorted(os.listdir(WF)) if f.endswith((".yml", ".yaml"))}
+
+reusable, callers = {}, {}
+for fn, d in workflows.items():
+    on = d.get(True, d.get("on"))          # YAML 1.1 parses bare `on` as True
+    if isinstance(on, dict) and "workflow_call" in on:
+        reusable[fn] = d
+    for job in (d.get("jobs") or {}).values():
+        if isinstance(job, dict) and "uses" in job:
+            callers.setdefault(fn, []).append(job["uses"])
+
+check("wiring: both reusable workflows are present",
+      set(reusable) == {"reusable-dco.yml", "reusable-significance.yml"},
+      f"found {sorted(reusable)}")
+
+check("wiring: no file is both a caller and a reusable workflow",
+      not (set(reusable) & set(callers)),
+      f"both: {sorted(set(reusable) & set(callers))}")
+
+for fn, uses_list in callers.items():
+    for uses in uses_list:
+        target = uses.split("@")[0].split("/")[-1]
+        check(f"wiring: {fn} -> {target} exists and accepts workflow_call",
+              target in reusable,
+              f"{uses!r} does not resolve to a workflow_call workflow here")
+        check(f"wiring: {fn} does not call itself", target != fn,
+              f"{fn} resolves to itself")
 
 print()
 print(f"{len(fails)} failure(s)" if fails else "all green")
