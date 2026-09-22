@@ -109,32 +109,35 @@ jobs:
               print(f"  {short}  {commit.get('message','').splitlines()[0][:60]}")
               print(f"            {why}")
               print(f"            author: {author.get('name')} <{author.get('email')}>")
+          # The remediation commands live in CONTRIBUTING.md, not here, and
+          # that is deliberate on two counts.
+          #
+          # They were here, duplicated from that section, and two copies of
+          # "how to fix your commits" drift -- the one a contributor is sent to
+          # and the one they actually see.
+          #
+          # The second reason is specific to this infrastructure: the mirroring
+          # service scans every workflow for publish markers -- pushing to a
+          # remote is one of them -- and treats a match as a publish job that
+          # must consult the release-authority switch. That scan is
+          # deliberately over-broad, because for its real purpose a false
+          # positive costs a conversation and a false negative costs an
+          # unrepeatable version number. Putting a copy-pasteable push
+          # command inside a workflow made this file a
+          # standing false positive in a check whose value depends on staying
+          # quiet when things are fine.
           print("\n".join([
               "",
               "Every commit needs a `Signed-off-by` trailer matching its author.",
-              "This certifies the Developer Certificate of Origin 1.1:",
-              "  https://github.com/psstools/.github/blob/main/DCO",
+              "This certifies the Developer Certificate of Origin 1.1 -- it is not",
+              "a copyright assignment and it is not a CLA.",
               "",
-              "It is not a copyright assignment and it is not a CLA.",
+              "  The DCO:      https://github.com/psstools/.github/blob/main/DCO",
+              "  How to fix:   https://github.com/psstools/.github/blob/main/CONTRIBUTING.md#signing-off-dco",
               "",
-              "To fix the most recent commit:",
-              "",
-              "    git commit --amend -s --no-edit",
-              "    git push --force-with-lease",
-              "",
-              "To fix every commit on the branch (use the base branch name):",
-              "",
-              "    git rebase --signoff origin/main",
-              "    git push --force-with-lease",
-              "",
-              "To sign off automatically from now on use `git commit -s`, with:",
-              "",
-              "    git config user.name  \"Your Name\"",
-              "    git config user.email \"your.email@example.com\"",
-              "",
+              "In short: `git commit -s` signs off as you commit, `--amend -s` fixes",
+              "the last commit, and `git rebase --signoff <base>` fixes a whole branch.",
               "Editing files in the GitHub web UI signs off for you.",
-              "",
-              "See https://github.com/psstools/.github/blob/main/CONTRIBUTING.md#signing-off-dco",
           ]))
           sys.exit(1)
           PY
