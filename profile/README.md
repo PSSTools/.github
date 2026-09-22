@@ -49,3 +49,20 @@ Full documentation lives at **[psstools.github.io](https://psstools.github.io)**
 
 We welcome issues and pull requests across all repositories. Head to the
 project you're interested in to file an issue or open a PR.
+
+Before opening a pull request, please read
+**[CONTRIBUTING.md](https://github.com/psstools/.github/blob/main/CONTRIBUTING.md)** — it
+covers the inbound terms and the two things asked of every contribution:
+
+- **Sign off your commits.** `git commit -s` adds a `Signed-off-by` trailer certifying the
+  [DCO](https://github.com/psstools/.github/blob/main/DCO). A CI check enforces it. This is
+  not a copyright assignment — projects here carry shared copyright
+  (`Copyright <year> Matthew Ballance and Contributors`) and you keep yours.
+- **Follow the
+  [Code of Conduct](https://github.com/psstools/.github/blob/main/CODE_OF_CONDUCT.md).**
+
+Substantial contributions additionally need a signed ICLA; the threshold is published and
+generous, and most contributions never reach it. Contributions are licensed under
+Apache-2.0 and may be relicensed or contributed to a standards body such as Accellera as
+part of long-term stewardship — see the
+[relicensing notice](https://github.com/psstools/.github/blob/main/CONTRIBUTING.md#relicensing-notice).

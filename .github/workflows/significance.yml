@@ -1,0 +1,202 @@
+# CA-T2 -- ICLA significance gate (reusable).
+#
+# Implements clauses 1 and 2 of the significance threshold in CONTRIBUTING.md.
+# Clause 3 (cumulative additions per contributor) is deliberately NOT here:
+# walking history live in CI is not worth building, and a periodic maintainer
+# sweep catches the slow accumulator while they are still reachable.
+#
+# WHY pull_request_target: labelling and commenting need a write token, and a
+# `pull_request` run from a fork gets a read-only one. The usual danger of
+# pull_request_target is that it runs with secrets against attacker-controlled
+# code -- so this workflow NEVER checks out the pull request. It reads the diff
+# shape through the API and executes nothing from the branch. Do not add a
+# checkout step here.
+#
+# This gate is advisory on purpose. It labels and explains; it does not fail.
+# Whether a contribution genuinely needs an ICLA is a maintainer judgment that
+# line counts only approximate, and CONTRIBUTING.md promises a waiver in both
+# directions.
+name: ICLA significance
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  significance:
+    name: Significance threshold
+    runs-on: ubuntu-latest
+    steps:
+      - name: Evaluate threshold
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          gh api --paginate "repos/$REPO/pulls/$PR/files" > files.json
+          python3 - <<'PY' > verdict.json
+          import json, os, re
+
+          files = json.load(open("files.json"))
+
+          # Source roots for clause 1. A new file here is self-contained
+          # expressive work and the most likely thing to ever need excising.
+          SOURCE_ROOTS = ("src/", "python/", "ts/")
+
+          # Extensions that count as source for the line count in clause 2.
+          SOURCE_EXT = (
+              ".py", ".pyi", ".ts", ".tsx", ".js", ".jsx",
+              ".c", ".h", ".cc", ".cpp", ".hpp", ".cxx", ".hxx",
+              ".java", ".rs", ".go", ".sv", ".svh", ".v", ".vh",
+              ".pss", ".g4", ".cmake", ".sh",
+          )
+
+          # Excluded from BOTH clauses: generated output, lockfiles and
+          # vendored trees are not authorship, and counting them produces a
+          # false trip on a routine dependency bump.
+          EXCLUDE_RE = re.compile(
+              r"(^|/)("
+              r"generated|gen|_generated|vendor|vendored|third_party|thirdparty|"
+              r"node_modules|dist|build|out|\.venv|__pycache__"
+              r")(/|$)"
+              r"|(^|/)(antlr|antlr4)(/|$)"
+              r"|(^|/)[^/]*(Lexer|Parser|Listener|Visitor)\.(py|ts|java|js)$"
+              r"|(^|/)(poetry\.lock|package-lock\.json|yarn\.lock|pnpm-lock\.yaml|"
+              r"Cargo\.lock|uv\.lock|requirements.*\.txt)$"
+              r"|\.(interp|tokens)$",
+              re.IGNORECASE,
+          )
+
+          def excluded(path):
+              return bool(EXCLUDE_RE.search(path))
+
+          new_source_files, counted, net = [], [], 0
+          skipped = []
+
+          for f in files:
+              path = f["filename"]
+              if excluded(path):
+                  skipped.append(path)
+                  continue
+              if f["status"] == "added" and path.startswith(SOURCE_ROOTS):
+                  new_source_files.append(path)
+              if path.endswith(SOURCE_EXT):
+                  counted.append(path)
+                  net += f.get("additions", 0) - f.get("deletions", 0)
+
+          clause1 = bool(new_source_files)
+          clause2 = net > 100
+
+          print(json.dumps({
+              "trips": clause1 or clause2,
+              "clause1": clause1,
+              "clause2": clause2,
+              "new_source_files": sorted(new_source_files),
+              "net": net,
+              "counted": len(counted),
+              "skipped": len(skipped),
+          }, indent=2))
+          PY
+          cat verdict.json
+
+          TRIPS=$(python3 -c 'import json;print(json.load(open("verdict.json"))["trips"])')
+
+          {
+            echo "### ICLA significance threshold"
+            echo
+            python3 - <<'PY'
+          import json
+          v = json.load(open("verdict.json"))
+          print(f"- New source file under a source root: **{'yes' if v['clause1'] else 'no'}**")
+          for p in v["new_source_files"]:
+              print(f"  - `{p}`")
+          print(f"- Net lines added to tracked source: **{v['net']}** (threshold: 100)")
+          print(f"- Files counted: {v['counted']}; excluded as generated/vendored/lockfile: {v['skipped']}")
+          print()
+          print("**Threshold tripped — an ICLA is required before merge.**" if v["trips"]
+                else "**Below threshold — no ICLA required.** Sign-off alone is sufficient.")
+          PY
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$TRIPS" = "True" ]; then
+            gh pr edit "$PR" --repo "$REPO" --add-label needs-icla || \
+              echo "note: could not add label (it may not exist in this repo yet)"
+          else
+            gh pr edit "$PR" --repo "$REPO" --remove-label needs-icla 2>/dev/null || true
+          fi
+
+          echo "TRIPS=$TRIPS" >> "$GITHUB_ENV"
+
+      - name: Explain the requirement
+        if: env.TRIPS == 'True'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+
+          # One comment per pull request, updated in place. A bot that
+          # re-comments on every push is a bot people mute.
+          MARKER="<!-- psstools:icla-significance -->"
+          EXISTING=$(gh api --paginate "repos/$REPO/issues/$PR/comments" \
+            --jq "[.[] | select(.body | contains(\"$MARKER\"))] | .[0].id // empty")
+
+          python3 - <<'PY' > comment.md
+          import json
+          v = json.load(open("verdict.json"))
+          reasons = []
+          if v["clause1"]:
+              files = "\n".join(f"  - `{p}`" for p in v["new_source_files"])
+              reasons.append("- It **adds a new source file** under a source root:\n" + files)
+          if v["clause2"]:
+              reasons.append(f"- It adds **{v['net']} net lines** to tracked source (threshold: 100).")
+
+          print("<!-- psstools:icla-significance -->")
+          print("### This pull request passes the ICLA threshold")
+          print()
+          print("Thanks for a substantial contribution — that is exactly the kind this gate "
+                "is looking for, and it is not a complaint.")
+          print()
+          print("Most contributions to psstools need no paperwork beyond a sign-off. This one "
+                "trips the published [significance threshold]"
+                "(https://github.com/psstools/.github/blob/main/CONTRIBUTING.md#when-an-icla-is-required) "
+                "because:")
+          print()
+          print("\n".join(reasons))
+          print()
+          print("**What that means.** An Individual Contributor License Agreement is needed "
+                "before this merges. It is a license grant, not a copyright assignment — you "
+                "keep your copyright. It exists so the project can be contributed to a "
+                "standards organization such as Accellera later without tracking down every "
+                "contributor. See the [relicensing notice]"
+                "(https://github.com/psstools/.github/blob/main/CONTRIBUTING.md#relicensing-notice).")
+          print()
+          print("**What to do.** Nothing yet — a maintainer will follow up here with the "
+                "paperwork. Review and iteration continue as normal in the meantime; the ICLA "
+                "is needed before *merge*, not before discussion.")
+          print()
+          print("**If you are contributing on company time**, your employer most likely owns "
+                "the copyright and a personal ICLA will not cover it. Please say so below — a "
+                "Corporate CLA is the right instrument and it is much cheaper to start that "
+                "conversation now than after review.")
+          print()
+          print("**If this looks wrong** — a mechanical rename, a generated-file refresh, or "
+                "anything that trips on volume rather than originality — say so. Maintainers "
+                "waive the requirement in exactly those cases. Line counts approximate "
+                "originality; they do not define it.")
+          PY
+
+          # Build the JSON body with jq rather than `-F body=@file`, so that
+          # backticks, quotes and newlines in the comment cannot be reinterpreted.
+          jq -Rs '{body: .}' comment.md > payload.json
+
+          if [ -n "$EXISTING" ]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$EXISTING" --input payload.json --silent
+          else
+            gh api -X POST "repos/$REPO/issues/$PR/comments" --input payload.json --silent
+          fi

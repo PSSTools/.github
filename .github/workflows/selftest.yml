@@ -1,0 +1,24 @@
+# Self-test for the reusable workflows in this repository.
+#
+# dco.yml and significance.yml are called by every psstools repository, so a
+# regression here is a regression everywhere at once, and it would surface on
+# someone else's pull request rather than on the change that caused it.
+#
+# Paired with .forgejo/workflows/selftest.yml. The two differ in nothing --
+# there is no release authority to gate and no publish step to reach.
+name: Self-test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    name: Workflow logic
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PyYAML
+        run: python3 -m pip install --quiet pyyaml
+      - name: Run tests
+        run: python3 tests/test_workflows.py

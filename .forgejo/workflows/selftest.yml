@@ -1,0 +1,46 @@
+# Forgejo counterpart of .github/workflows/selftest.yml.
+#
+# COPY THIS AS A PAIR. Its existence is also what stops the Forgejo runner
+# falling back to running .github/workflows/ wholesale for this repository --
+# that fallback applies when .forgejo/workflows/ is absent, and it is absent
+# per DIRECTORY, not per file.
+#
+# It differs from its GitHub counterpart in two things only: the runner
+# constraints below, and the internal-identifier check, which has no GitHub
+# equivalent. There is no release authority to gate and no publish step here.
+#
+# FORGEJO RUNNER CONSTRAINTS -- measured on this instance, not assumed:
+#   * `python` unqualified does not exist. Use python3.
+#   * No third-party actions: a bare `uses:` resolves against code.forgejo.org,
+#     not github.com. actions/checkout does resolve.
+name: Self-test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    name: Workflow logic
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for internal identifiers in tracked files
+        # This repo is published publicly, so anything committed here is
+        # public. Internal host names, tailnet addresses and CGNAT-range IPs
+        # must not appear in tracked files -- if a build ever needs one, it
+        # belongs in a repository secret, which is masked in logs.
+        run: |
+          pattern='perch-char\.ts\.net|\.ts\.net|a9550|100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\.[0-9]+\.[0-9]+'
+          if git grep -nIE "$pattern" -- . ':!.forgejo/workflows/selftest.yml' ; then
+            echo "::error::internal identifier found in a tracked file (see matches above)"
+            exit 1
+          fi
+          echo "OK: no internal identifiers in tracked files"
+
+      - name: Install PyYAML
+        run: python3 -m pip install --quiet pyyaml
+
+      - name: Run tests
+        run: python3 tests/test_workflows.py
