@@ -16,6 +16,17 @@ needed.
 | Name | Contact | Affiliation at time of contribution | ICLA | Since |
 |---|---|---|---|---|
 | Matthew Ballance | matt.ballance@gmail.com | — (project maintainer) | n/a — copyright holder | 2019 |
+| Matthew Ballance | mballance@oatfieldi9.localdomain | — (same person; legacy workstation identity) | n/a — copyright holder | 2020 |
+
+## A note on the second row
+
+`git` records whatever `user.email` was configured on the machine that made the commit, and
+a machine-local address is not a contact — it never reached anybody. The quarterly sweep
+(`scripts/ca-sweep.py --contributors`) counts by identity, so an alias that is not recorded
+here shows up as an unrecognised contributor past the threshold. It found exactly that on
+its first run, which is the behaviour to want: **the alias is listed rather than
+special-cased**, because the day that pattern appears for someone who is *not* the
+maintainer, it must not be silently absorbed.
 
 ## Adding yourself
 
