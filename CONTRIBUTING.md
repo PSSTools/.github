@@ -8,7 +8,9 @@ Two things are asked of every contribution, and one more is asked only of substa
 
 1. **Sign off every commit** (Developer Certificate of Origin) — always.
 2. **Follow the [Code of Conduct](CODE_OF_CONDUCT.md)** — always.
-3. **Sign an ICLA** — only above the [significance threshold](#when-an-icla-is-required).
+3. **Sign an [ICLA](ICLA.md)** — only above the
+   [significance threshold](#when-an-icla-is-required). Contributing on company time? See
+   [`CCLA.md`](CCLA.md) instead.
 
 ---
 
@@ -121,17 +123,29 @@ applied wrongly in either direction, say so on the pull request.
 
 If you are contributing as part of your employment, your employer — not you — most likely
 owns the copyright, and an ICLA signed by you alone will not cover it. Say so early on the
-pull request. A Corporate CLA is the right instrument, and starting that conversation before
-the code is written is much cheaper than after.
+pull request. [`CCLA.md`](CCLA.md) is the right instrument — signed once by your employer, it
+covers every employee it lists, so the next person from your company does not restart the
+conversation. Starting that conversation before the code is written is much cheaper than
+after.
 
 ### What happens if the gate trips
 
 The pull request gets a `needs-icla` label and a bot comment explaining why. Review and
 iteration continue as normal — the ICLA is needed before **merge**, not before discussion.
 
-> The ICLA and CCLA texts are being finalized. Until they are published here, a maintainer
-> will work it out with you directly on the pull request; nothing is blocked on your side in
-> the meantime.
+To sign, fill in the block at the end of [`ICLA.md`](ICLA.md) and email it to
+matt.ballance@gmail.com from the address you commit with, or post it as a comment on the pull
+request. There is no printer, no scanner, and no third-party CLA service involved. If you are
+contributing on company time, [`CCLA.md`](CCLA.md) is the document you want instead — it is
+signed once by the company and covers everyone it lists.
+
+**What you are agreeing to.** The ICLA is the Apache ICLA v2.0 with one added section, and
+that section is the whole point of it: it lets these projects be relicensed under another
+OSI-approved license, or handed to a standards body such as Accellera, without chasing down
+every contributor years later. It does **not** let anything already released under Apache-2.0
+be taken back, and it does not touch your ownership of your own work. Both documents open by
+listing every deviation from the stock Apache text, so a legal reviewer can diff rather than
+read.
 
 Signed agreements are recorded in [`CONTRIBUTORS.md`](CONTRIBUTORS.md).
 

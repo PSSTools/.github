@@ -28,8 +28,9 @@ https://github.com/psstools/.github/blob/main/CONTRIBUTING.md
 
 <!--
 If this contribution is part of your employment, your employer most likely owns the
-copyright and a personal ICLA will not cover it. Please say so here — it is much cheaper to
-sort out now than after review.
+copyright and a personal ICLA will not cover it. CCLA.md is the right instrument. Please say
+so here — it is much cheaper to sort out now than after review.
+https://github.com/psstools/.github/blob/main/CCLA.md
 -->
 
 - [ ] This is a personal contribution.
@@ -37,6 +38,7 @@ sort out now than after review.
 
 <!--
 If the `needs-icla` label appears on this pull request, an automated check found that it
-passes the significance threshold. A maintainer will follow up. Review continues in the
-meantime — the ICLA is needed before merge, not before discussion.
+passes the significance threshold, and the bot comment explains which clause and what to do.
+Review continues in the meantime — the ICLA is needed before merge, not before discussion.
+https://github.com/psstools/.github/blob/main/ICLA.md
 -->

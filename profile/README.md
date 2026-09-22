@@ -61,8 +61,11 @@ covers the inbound terms and the two things asked of every contribution:
 - **Follow the
   [Code of Conduct](https://github.com/psstools/.github/blob/main/CODE_OF_CONDUCT.md).**
 
-Substantial contributions additionally need a signed ICLA; the threshold is published and
-generous, and most contributions never reach it. Contributions are licensed under
+Substantial contributions additionally need a signed
+[ICLA](https://github.com/psstools/.github/blob/main/ICLA.md) — or, for work done on company
+time, a [CCLA](https://github.com/psstools/.github/blob/main/CCLA.md). The threshold is
+published and generous, and most contributions never reach it. Contributions are licensed
+under
 Apache-2.0 and may be relicensed or contributed to a standards body such as Accellera as
 part of long-term stewardship — see the
 [relicensing notice](https://github.com/psstools/.github/blob/main/CONTRIBUTING.md#relicensing-notice).

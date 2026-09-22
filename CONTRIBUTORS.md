@@ -8,10 +8,12 @@ contributors. Commit email addresses go stale — the single most useful thing r
 is a contact that will still work in five years.
 
 **Affiliation** is recorded as of the time of contribution and is not updated afterwards.
-**ICLA** records whether a signed Individual (or Corporate) Contributor License Agreement is
-on file; see [CONTRIBUTING.md](CONTRIBUTING.md#when-an-icla-is-required) for when one is
-required. `n/a` means the contributor has not passed the significance threshold and none is
-needed.
+**ICLA** records whether a signed [Individual](ICLA.md) (or [Corporate](CCLA.md)) Contributor
+License Agreement is on file; see
+[CONTRIBUTING.md](CONTRIBUTING.md#when-an-icla-is-required) for when one is required. `n/a`
+means the contributor has not passed the significance threshold and none is needed. Where one
+is on file, the entry names the document version and the date it was received —
+`ICLA v1.0, 2026-11-04`.
 
 | Name | Contact | Affiliation at time of contribution | ICLA | Since |
 |---|---|---|---|---|
